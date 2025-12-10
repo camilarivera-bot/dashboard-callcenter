@@ -5,12 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Call Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIQZr5gmMQojTwGgGgHzymz50pwH93E60",
+            authDomain: "supercampeonescallcenter.firebaseapp.com",
+            projectId: "supercampeonescallcenter",
+            storageBucket: "supercampeonescallcenter.firebasestorage.app",
+            messagingSenderId: "560676827898",
+            appId: "1:560676827898:web:727d9db1cb8d3bfe738f43"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.orderBy = orderBy;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadRecords();
+        });
+
+        async function loadRecords() {
+            try {
+                document.getElementById('loadingSpinner').style.display = 'block';
+                const q = query(collection(db, 'records'), orderBy('date', 'desc'));
+                const querySnapshot = await getDocs(q);
+                window.records = [];
+                querySnapshot.forEach((doc) => {
+                    window.records.push({ id: doc.id, ...doc.data() });
+                });
+                document.getElementById('loadingSpinner').style.display = 'none';
+                console.log('Registros cargados:', window.records.length);
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+        window.loadRecords = loadRecords;
+    </script>
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div id="loadingSpinner" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50" style="display:none">
+        <div class="bg-white rounded-lg p-6 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p class="text-gray-700">Cargando datos...</p>
+        </div>
+    </div>
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-2">📊 Dashboard Super Campeones</h1>
-            <p class="text-gray-600">Sistema de seguimiento y métricas diarias</p>
+            <p class="text-gray-600">Sistema de seguimiento y métricas diarias - Firebase Sync</p>
             <div id="saveStatus" class="mt-2"></div>
         </div>
         <div class="flex flex-wrap gap-4 mb-6">
@@ -52,4 +102,18 @@
                     <div><label class="block text-xs font-medium mb-1">Método Cambios</label><input type="number" id="metodoCambios" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="0"></div>
                     <div><label class="block text-xs font-medium mb-1">Bodega Alexander</label><input type="number" id="bodegaAlexander" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="0"></div>
                     <div><label class="block text-xs font-medium mb-1">Voucher</label><input type="number" id="voucher" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="0"></div>
-                    <div><label class="block text-xs font-medium mb-1">Anticipado</label><input type="number" id="anticipado" c
+                    <div><label class="block text-xs font-medium mb-1">Anticipado</label><input type="number" id="anticipado" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="0"></div>
+                    <div><label class="block text-xs font-medium mb-1">Revendedor</label><input type="number" id="revendedor" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="0"></div>
+                </div>
+            </div>
+            <button onclick="submitForm()" id="submitBtn" class="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold text-lg">✅ Registrar Día</button>
+        </div>
+        <div id="dashboardView" style="display:none">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">📅 Filtrar por Mes</h3>
+                <input type="month" id="selectedMonth" onchange="updateDashboard()" class="px-4 py-2 border rounded-lg">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-lg p-6"><p class="text-gray-500 text-sm">Total Pares</p><p id="statTotalPares" class="text-3xl font-bold text-purple-600">0</p></div>
+                <div class="bg-white rounded-lg shadow-lg p-6"><p class="text-gray-500 text-sm">Mensajes</p><p id="statTotalMensajes" class="text-3xl font-bold text-blue-600">0</p></div>
+                <div class="bg-white rounded-
